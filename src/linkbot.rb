@@ -46,6 +46,22 @@ bot.message(containing: URI.regexp) do |event|
   end
 
   unless changed_links.empty?
+    channel_id = event.message.channel.id
+    message_id = event.message.id
+    begin
+      Discordrb::API.request(
+        :channel_cid_message_mid,
+        channel_id,
+        :post,
+        "#{Discordrb::API.api_base}/channels/#{channel_id}/messages/#{message_id}/suppress-embeds",
+        { supress: true }.to_json,
+        Authorization: bot.token,
+        content_type: :json,
+      )
+    rescue Discordrb::Errors::NoPermission
+      Discordrb::LOGGER.warn 'No permission to suppress embeds'
+    end
+
     event.respond "Fixed those links for you:\n#{changed_links.join "\n"}"
   end
 end
